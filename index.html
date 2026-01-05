@@ -6,7 +6,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Employee Viewer</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --text-main: #1f2937;
+            --text-sub: #6b7280;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #111827;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 500px;
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            border: 1px solid #d1d5db;
+            border-radius: 50px;
+            outline: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: #111827;
+        }
+
+        .card p {
+            margin: 5px 0;
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .card .role {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-sub);
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 
 <body>
@@ -18,14 +119,105 @@
         </header>
 
         <div id="resultsGrid" class="grid">
-            <!-- Employee cards will appear here -->
-            <div class="empty-state">Type to search employees...</div>
+            <div class="empty-state">Loading...</div>
         </div>
     </div>
 
-    <!-- Supabase JS Client -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="script.js"></script>
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = "https://zovnmmdfthpbubrorsgh.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE";
+
+        // Check if Supabase SDK is loaded
+        if (!window.supabase) {
+            document.getElementById('resultsGrid').innerHTML = '<div class="empty-state" style="color:red">Error: Supabase SDK could not load. Check internet connection.</div>';
+        }
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const searchInput = document.getElementById('searchInput');
+        const resultsGrid = document.getElementById('resultsGrid');
+
+        let debounceTimer;
+
+        // Auto-load data on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Loaded, fetching employees...");
+            fetchEmployees('');
+        });
+
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const query = e.target.value.trim();
+                fetchEmployees(query);
+            }, 300);
+        });
+
+        async function fetchEmployees(query) {
+            console.log("Fetching with query:", query);
+            resultsGrid.innerHTML = '<div class="empty-state">Searching...</div>';
+
+            try {
+                let dbQuery = supabase.from('employees').select('*');
+
+                if (query) {
+                    const searchFilter = `name.ilike.%${query}%,emp_id.ilike.%${query}%,role.ilike.%${query}%,location.ilike.%${query}%`;
+                    dbQuery = dbQuery.or(searchFilter);
+                }
+
+                // Add a timeout to catch network hangs
+                const timeoutDetails = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Request timed out. Check internet or database connection.")), 5000)
+                );
+
+                const { data, error } = await Promise.race([dbQuery.limit(50), timeoutDetails]);
+
+                if (error) {
+                    console.error("Supabase Error:", error);
+                    throw error;
+                }
+
+                console.log("Data received:", data);
+                renderResults(data);
+
+            } catch (err) {
+                console.error('Error fetching data:', err);
+                resultsGrid.innerHTML = `<div class="empty-state" style="color:red">
+                    <h3>Error Loading Data</h3>
+                    <p>${err.message}</p>
+                    <small>Ensure the 'employees' table exists and RLS is disabled in Supabase.</small>
+                </div>`;
+            }
+        }
+
+        function renderResults(employees) {
+            if (!employees || employees.length === 0) {
+                resultsGrid.innerHTML = '<div class="empty-state">No employees found.</div>';
+                return;
+            }
+
+            resultsGrid.innerHTML = employees.map(emp => `
+                <div class="card">
+                    <span class="role">${escapeHtml(emp.role || 'N/A')}</span>
+                    <h3>${escapeHtml(emp.name || 'Unknown Name')}</h3>
+                    <p><strong>ID:</strong> ${escapeHtml(emp.emp_id || '-')}</p>
+                    <p><strong>📍</strong> ${escapeHtml(emp.location || '-')}</p>
+                    <p><strong>📞</strong> ${escapeHtml(emp.mobile || '-')}</p>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return text;
+            return text.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
 
 </body>
 
