@@ -7,22 +7,22 @@
     <meta name="description" content="NLPL Employee Directory - Search and browse employee information">
     <meta name="author" content="NLPL">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    
+
     <!-- Open Graph / Social Media -->
     <meta property="og:title" content="NLPL Employee Directory">
     <meta property="og:description" content="Search and browse the NLPL employee directory">
     <meta property="og:type" content="website">
-    
+
     <title>NLPL | Employee Directory</title>
-    
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
+
     <style>
         * {
             margin: 0;
@@ -61,7 +61,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(circle at 20% 80%, rgba(129, 140, 248, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.1) 0%, transparent 50%);
             pointer-events: none;
@@ -302,6 +302,32 @@
             flex-shrink: 0;
         }
 
+        .phone-item {
+            flex-wrap: wrap;
+        }
+
+        .call-btn {
+            margin-left: auto;
+            padding: 8px 16px;
+            background: linear-gradient(135deg, var(--accent), #10b981);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+        }
+
+        .call-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 211, 153, 0.4);
+        }
+
+        .call-btn:active {
+            transform: translateY(0);
+        }
+
         /* Loading & Empty States */
         .empty-state {
             grid-column: 1 / -1;
@@ -340,7 +366,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Error State */
@@ -422,12 +450,13 @@
             </div>
             <h1>NLPL Employee Directory</h1>
             <p class="subtitle">Search and browse employee information</p>
-            
+
             <div class="search-wrapper">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="searchInput" placeholder="Search by name, ID, role, or location..." autocomplete="off">
+                <input type="text" id="searchInput" placeholder="Search by name, ID, role, or location..."
+                    autocomplete="off">
             </div>
-            
+
             <div class="stats-bar" id="statsBar">
                 <div class="stat-item">
                     <div class="stat-value" id="totalCount">-</div>
@@ -448,8 +477,10 @@
         </div>
 
         <footer>
-            <p>© 2026 NLPL. Powered by <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a> | 
-            Hosted on <a href="https://pages.github.com" target="_blank" rel="noopener noreferrer">GitHub Pages</a></p>
+            <p>© 2026 NLPL. Powered by <a href="https://supabase.com" target="_blank"
+                    rel="noopener noreferrer">Supabase</a> |
+                Hosted on <a href="https://pages.github.com" target="_blank" rel="noopener noreferrer">GitHub Pages</a>
+            </p>
         </footer>
     </div>
 
@@ -594,9 +625,10 @@
                                 <span class="detail-icon">📍</span>
                                 <span>${this.escapeHtml(emp.location || '-')}</span>
                             </div>
-                            <div class="detail-item">
+                            <div class="detail-item phone-item">
                                 <span class="detail-icon">📞</span>
                                 <span>${this.escapeHtml(emp.mobile || '-')}</span>
+                                ${emp.mobile ? `<a href="tel:${this.escapeHtml(emp.mobile)}" class="call-btn" title="Call ${this.escapeHtml(emp.name)}">📱 Call</a>` : ''}
                             </div>
                         </div>
                     </div>
