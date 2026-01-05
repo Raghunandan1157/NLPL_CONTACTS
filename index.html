@@ -384,16 +384,46 @@
         }
 
         .role-pill {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(124, 58, 237, 0.15);
-            color: #d8b4fe;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
             font-size: 0.75rem;
-            font-weight: 600;
-            border-radius: 6px;
-            border: 1px solid rgba(124, 58, 237, 0.2);
+            font-weight: 700;
+            border-radius: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+            cursor: help;
+        }
+
+        /* Role Variants */
+        .role-vip {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.3);
+            box-shadow: 0 0 15px rgba(251, 191, 36, 0.15);
+        }
+
+        .role-mgmt {
+            background: rgba(236, 72, 153, 0.1);
+            color: #f472b6;
+            border-color: rgba(236, 72, 153, 0.3);
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.15);
+        }
+
+        .role-field {
+            background: rgba(6, 182, 212, 0.1);
+            color: #22d3ee;
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 15px rgba(6, 182, 212, 0.15);
+        }
+
+        .role-base {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            border-color: rgba(99, 102, 241, 0.3);
         }
 
         /* Card Body */
@@ -697,13 +727,17 @@
                 // Generate HTML string
                 const html = employees.map((emp, index) => {
                     const delay = index * CONFIG.animationStaggerDelay;
+                    const roleInfo = this.getRoleConfig(emp.role);
+
                     return `
                     <div class="card" style="animation-delay: ${delay}ms">
                         <div class="card-header">
                             <div class="avatar">${this.getInitials(emp.name)}</div>
                             <div class="card-info">
                                 <h3>${this.safe(emp.name)}</h3>
-                                <span class="role-pill">${this.safe(emp.role || 'Team Member')}</span>
+                                <span class="role-pill ${roleInfo.class}" title="${roleInfo.full}">
+                                    ${this.safe(emp.role || 'Team Member')}
+                                </span>
                             </div>
                         </div>
 
@@ -734,6 +768,33 @@
                 }).join('');
 
                 this.ui.grid.innerHTML = html;
+            },
+
+            getRoleConfig(role) {
+                if (!role) return { class: 'role-base', full: 'Team Member' };
+
+                const r = role.toUpperCase();
+
+                // VIP / Leadership (Gold)
+                if (['DIRECTOR', 'LEADER', 'RM', 'DM', 'ZM', 'VP', 'CEO'].some(x => r.includes(x))) {
+                    const map = { 'RM': 'Regional Manager', 'DM': 'District Manager', 'ZM': 'Zonal Manager' };
+                    return { class: 'role-vip', full: map[r] || role };
+                }
+
+                // Management (Pink)
+                if (['BM', 'ABM', 'MANAGER', 'ACM', 'BSM'].some(x => r.includes(x))) {
+                    const map = { 'BM': 'Branch Manager', 'ABM': 'Asst. Branch Manager', 'ACM': 'Area Credit Manager', 'BSM': 'Business Sales Manager' };
+                    return { class: 'role-mgmt', full: map[r] || role };
+                }
+
+                // Field / Sales (Cyan)
+                if (['FO', 'DOE', 'ROE', 'TSM', 'RVO', 'IA', 'AUDIT'].some(x => r.includes(x))) {
+                    const map = { 'FO': 'Field Officer', 'DOE': 'Data Entry Operator', 'ROE': 'Regional Ops Exec' };
+                    return { class: 'role-field', full: map[r] || role };
+                }
+
+                // Default (Indigo)
+                return { class: 'role-base', full: role };
             },
 
             getInitials(name) {
