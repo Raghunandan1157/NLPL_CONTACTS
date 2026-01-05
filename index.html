@@ -4,221 +4,627 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Viewer</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <meta name="description" content="NLPL Employee Directory - Search and browse employee information">
+    <meta name="author" content="NLPL">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="NLPL Employee Directory">
+    <meta property="og:description" content="Search and browse the NLPL employee directory">
+    <meta property="og:type" content="website">
+    
+    <title>NLPL | Employee Directory</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --primary: #2563eb;
-            --text-main: #1f2937;
-            --text-sub: #6b7280;
+            --bg-gradient-start: #0f0c29;
+            --bg-gradient-mid: #302b63;
+            --bg-gradient-end: #24243e;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.12);
+            --primary: #818cf8;
+            --primary-glow: rgba(129, 140, 248, 0.4);
+            --accent: #34d399;
+            --text-main: #f1f5f9;
+            --text-sub: #94a3b8;
+            --text-muted: #64748b;
+            --shadow-color: rgba(0, 0, 0, 0.3);
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
             color: var(--text-main);
-            margin: 0;
-            padding: 0;
             min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(129, 140, 248, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(52, 211, 153, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 60px 24px;
         }
 
+        /* Header Section */
         header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 8px 32px var(--primary-glow);
         }
 
         h1 {
-            font-size: 2rem;
-            margin-bottom: 20px;
-            color: #111827;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: var(--text-sub);
+            font-size: 1rem;
+            margin-bottom: 32px;
+        }
+
+        /* Search Box */
+        .search-wrapper {
+            position: relative;
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            pointer-events: none;
         }
 
         input[type="text"] {
             width: 100%;
-            max-width: 500px;
-            padding: 15px 20px;
-            font-size: 1.1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 50px;
+            padding: 18px 24px 18px 52px;
+            font-size: 1rem;
+            font-family: inherit;
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            color: var(--text-main);
             outline: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            transition: all 0.2s;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+
+        input[type="text"]::placeholder {
+            color: var(--text-muted);
         }
 
         input[type="text"]:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 0 0 4px var(--primary-glow), 0 8px 32px var(--shadow-color);
         }
 
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-top: 24px;
+            padding: 16px;
             background: var(--card-bg);
             border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s;
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Results Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        /* Employee Card */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 24px;
+            backdrop-filter: blur(16px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 20px 40px var(--shadow-color);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .avatar {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .card-title-group {
+            flex: 1;
+            min-width: 0;
         }
 
         .card h3 {
-            margin: 0 0 5px 0;
             font-size: 1.1rem;
-            color: #111827;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .card p {
-            margin: 5px 0;
+        .role {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: rgba(129, 140, 248, 0.15);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-radius: 6px;
+        }
+
+        .card-details {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             color: var(--text-sub);
             font-size: 0.9rem;
         }
 
-        .card .role {
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            display: inline-block;
+        .detail-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
 
+        /* Loading & Empty States */
         .empty-state {
             grid-column: 1 / -1;
             text-align: center;
+            padding: 80px 40px;
             color: var(--text-sub);
-            padding: 40px;
-            font-size: 1.1rem;
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            font-size: 1.25rem;
+            color: var(--text-main);
+            margin-bottom: 8px;
+        }
+
+        .empty-state p {
+            color: var(--text-muted);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--card-border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error State */
+        .error-state {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+        }
+
+        .error-state h3 {
+            color: #f87171;
+            margin-bottom: 8px;
+        }
+
+        .error-state p {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .error-state small {
+            display: block;
+            margin-top: 12px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            padding-top: 24px;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .container {
+                padding: 40px 16px;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .stats-bar {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .card {
+                padding: 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-
     <div class="container">
         <header>
-            <h1>Employee Directory</h1>
-            <input type="text" id="searchInput" placeholder="Search by name, ID, role, or location...">
+            <div class="logo">
+                <div class="logo-icon">👥</div>
+            </div>
+            <h1>NLPL Employee Directory</h1>
+            <p class="subtitle">Search and browse employee information</p>
+            
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Search by name, ID, role, or location..." autocomplete="off">
+            </div>
+            
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalCount">-</div>
+                    <div class="stat-label">Total Employees</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="displayedCount">-</div>
+                    <div class="stat-label">Showing</div>
+                </div>
+            </div>
         </header>
 
         <div id="resultsGrid" class="grid">
-            <div class="empty-state">Loading...</div>
+            <div class="empty-state">
+                <div class="spinner"></div>
+                <p>Loading employees...</p>
+            </div>
         </div>
+
+        <footer>
+            <p>© 2026 NLPL. Powered by <a href="https://supabase.com" target="_blank" rel="noopener noreferrer">Supabase</a> | 
+            Hosted on <a href="https://pages.github.com" target="_blank" rel="noopener noreferrer">GitHub Pages</a></p>
+        </footer>
     </div>
 
     <script>
+        // =============================================
         // Supabase Configuration
+        // =============================================
         const SUPABASE_URL = "https://zovnmmdfthpbubrorsgh.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpvdm5tbWRmdGhwYnVicm9yc2doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjE1NzE3ODgsImV4cCI6MjA3NzE0Nzc4OH0.92BH2sjUOgkw6iSRj1_4gt0p3eThg3QT4VK-Q4EdmBE";
 
-        // Check if Supabase SDK is loaded
-        if (!window.supabase) {
-            document.getElementById('resultsGrid').innerHTML = '<div class="empty-state" style="color:red">Error: Supabase SDK could not load. Check internet connection.</div>';
-        }
+        // =============================================
+        // App Initialization
+        // =============================================
+        const App = {
+            supabase: null,
+            elements: {},
+            state: {
+                totalEmployees: 0,
+                debounceTimer: null
+            },
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const searchInput = document.getElementById('searchInput');
-        const resultsGrid = document.getElementById('resultsGrid');
-
-        let debounceTimer;
-
-        // Auto-load data on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM Loaded, fetching employees...");
-            fetchEmployees('');
-        });
-
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                const query = e.target.value.trim();
-                fetchEmployees(query);
-            }, 300);
-        });
-
-        async function fetchEmployees(query) {
-            console.log("Fetching with query:", query);
-            resultsGrid.innerHTML = '<div class="empty-state">Searching...</div>';
-
-            try {
-                let dbQuery = supabase.from('employees').select('*');
-
-                if (query) {
-                    const searchFilter = `name.ilike.%${query}%,emp_id.ilike.%${query}%,role.ilike.%${query}%,location.ilike.%${query}%`;
-                    dbQuery = dbQuery.or(searchFilter);
+            init() {
+                // Check Supabase SDK
+                if (!window.supabase) {
+                    this.showError("Supabase SDK could not load", "Check your internet connection and refresh the page.");
+                    return;
                 }
 
-                // Add a timeout to catch network hangs
-                const timeoutDetails = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error("Request timed out. Check internet or database connection.")), 5000)
-                );
+                // Initialize Supabase client
+                this.supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-                const { data, error } = await Promise.race([dbQuery.limit(50), timeoutDetails]);
+                // Cache DOM elements
+                this.elements = {
+                    searchInput: document.getElementById('searchInput'),
+                    resultsGrid: document.getElementById('resultsGrid'),
+                    totalCount: document.getElementById('totalCount'),
+                    displayedCount: document.getElementById('displayedCount')
+                };
 
-                if (error) {
-                    console.error("Supabase Error:", error);
-                    throw error;
+                // Bind events
+                this.elements.searchInput.addEventListener('input', (e) => this.handleSearch(e));
+
+                // Initial load
+                this.fetchEmployees('');
+            },
+
+            handleSearch(e) {
+                clearTimeout(this.state.debounceTimer);
+                this.state.debounceTimer = setTimeout(() => {
+                    const query = e.target.value.trim();
+                    this.fetchEmployees(query);
+                }, 300);
+            },
+
+            async fetchEmployees(query) {
+                this.showLoading();
+
+                try {
+                    let dbQuery = this.supabase.from('employees').select('*', { count: 'exact' });
+
+                    if (query) {
+                        const searchFilter = `name.ilike.%${query}%,emp_id.ilike.%${query}%,role.ilike.%${query}%,location.ilike.%${query}%`;
+                        dbQuery = dbQuery.or(searchFilter);
+                    }
+
+                    // Timeout for slow connections
+                    const timeout = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error("Request timed out. Please check your connection.")), 8000)
+                    );
+
+                    const { data, error, count } = await Promise.race([dbQuery.limit(50), timeout]);
+
+                    if (error) throw error;
+
+                    // Update stats
+                    if (!query) {
+                        this.state.totalEmployees = count || data.length;
+                    }
+                    this.updateStats(data.length);
+
+                    // Render results
+                    this.renderResults(data);
+
+                } catch (err) {
+                    console.error('Error fetching data:', err);
+                    this.showError("Unable to Load Data", err.message);
+                }
+            },
+
+            updateStats(displayed) {
+                this.elements.totalCount.textContent = this.state.totalEmployees || '-';
+                this.elements.displayedCount.textContent = displayed;
+            },
+
+            showLoading() {
+                this.elements.resultsGrid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="spinner"></div>
+                        <p>Searching...</p>
+                    </div>
+                `;
+            },
+
+            showError(title, message) {
+                this.elements.resultsGrid.innerHTML = `
+                    <div class="empty-state error-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h3>${this.escapeHtml(title)}</h3>
+                        <p>${this.escapeHtml(message)}</p>
+                        <small>Ensure the 'employees' table exists and RLS is properly configured in Supabase.</small>
+                    </div>
+                `;
+            },
+
+            renderResults(employees) {
+                if (!employees || employees.length === 0) {
+                    this.elements.resultsGrid.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">🔍</div>
+                            <h3>No Employees Found</h3>
+                            <p>Try adjusting your search terms or check back later.</p>
+                        </div>
+                    `;
+                    return;
                 }
 
-                console.log("Data received:", data);
-                renderResults(data);
+                this.elements.resultsGrid.innerHTML = employees.map(emp => `
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="avatar">${this.getInitials(emp.name)}</div>
+                            <div class="card-title-group">
+                                <h3>${this.escapeHtml(emp.name || 'Unknown')}</h3>
+                                <span class="role">${this.escapeHtml(emp.role || 'N/A')}</span>
+                            </div>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-item">
+                                <span class="detail-icon">🆔</span>
+                                <span>${this.escapeHtml(emp.emp_id || '-')}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📍</span>
+                                <span>${this.escapeHtml(emp.location || '-')}</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-icon">📞</span>
+                                <span>${this.escapeHtml(emp.mobile || '-')}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            },
 
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                resultsGrid.innerHTML = `<div class="empty-state" style="color:red">
-                    <h3>Error Loading Data</h3>
-                    <p>${err.message}</p>
-                    <small>Ensure the 'employees' table exists and RLS is disabled in Supabase.</small>
-                </div>`;
+            getInitials(name) {
+                if (!name) return '?';
+                return name.split(' ')
+                    .map(word => word.charAt(0))
+                    .slice(0, 2)
+                    .join('')
+                    .toUpperCase();
+            },
+
+            escapeHtml(text) {
+                if (!text) return text;
+                const div = document.createElement('div');
+                div.textContent = text.toString();
+                return div.innerHTML;
             }
-        }
+        };
 
-        function renderResults(employees) {
-            if (!employees || employees.length === 0) {
-                resultsGrid.innerHTML = '<div class="empty-state">No employees found.</div>';
-                return;
-            }
-
-            resultsGrid.innerHTML = employees.map(emp => `
-                <div class="card">
-                    <span class="role">${escapeHtml(emp.role || 'N/A')}</span>
-                    <h3>${escapeHtml(emp.name || 'Unknown Name')}</h3>
-                    <p><strong>ID:</strong> ${escapeHtml(emp.emp_id || '-')}</p>
-                    <p><strong>📍</strong> ${escapeHtml(emp.location || '-')}</p>
-                    <p><strong>📞</strong> ${escapeHtml(emp.mobile || '-')}</p>
-                </div>
-            `).join('');
-        }
-
-        function escapeHtml(text) {
-            if (!text) return text;
-            return text.toString()
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
+        // Start the app when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => App.init());
     </script>
-
 </body>
 
 </html>
+</CodeContent>
+<parameter name="EmptyFile">false
