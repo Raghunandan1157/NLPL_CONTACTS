@@ -542,7 +542,7 @@
                     let dbQuery = this.supabase.from('employees').select('*', { count: 'exact' });
 
                     if (query) {
-                        const searchFilter = `name.ilike.%${query}%,emp_id.ilike.%${query}%,role.ilike.%${query}%,location.ilike.%${query}%`;
+                        const searchFilter = `name.ilike.%${query}%,emp_id.ilike.%${query}%,role.ilike.%${query}%,location.ilike.%${query}%,mobile.ilike.%${query}%`;
                         dbQuery = dbQuery.or(searchFilter);
                     }
 
