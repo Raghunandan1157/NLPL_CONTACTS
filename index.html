@@ -158,29 +158,17 @@
             animation: slideDown 0.8s var(--ease-out-back);
         }
 
-        .logo-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 20px;
-            font-size: 32px;
+        .site-logo {
+            width: 160px;
+            height: auto;
             margin-bottom: 24px;
-            box-shadow: var(--glow-primary);
-            position: relative;
+            filter: drop-shadow(0 0 25px rgba(124, 58, 237, 0.4));
+            animation: floatLogo 6s ease-in-out infinite;
         }
 
-        .logo-badge::after {
-            content: '';
-            position: absolute;
-            inset: -4px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 24px;
-            z-index: -1;
-            opacity: 0.5;
-            filter: blur(10px);
+        @keyframes floatLogo {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
         }
 
         h1 {
@@ -580,8 +568,8 @@
 
     <div class="container">
         <header>
-            <div class="logo-badge">👥</div>
-            <h1>Team Directory</h1>
+            <img src="logo.png" alt="NLPL Logo" class="site-logo">
+            <h1>NLPL Team Directory</h1>
             <p class="subtitle">Connect with your colleagues across the organization.</p>
 
             <div class="search-container">
